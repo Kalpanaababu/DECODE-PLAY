@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DECODE & PLAY</title>
+
+    <style>
+/* Disable text selection and copying */
+body, * {
+  user-select: none;         /* Prevent selection */
+  -webkit-user-select: none; /* Safari/Chrome */
+  -moz-user-select: none;    /* Firefox */
+}
+    </style>
+
+    <style>
+        html, body {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* ✅ Fixed Background Section */
+        body {
+            background-color: black; /* base background color */
+            font-family: Arial, sans-serif;
+            color: white;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        /* ✅ Make clickable map image full-screen */
+        .bgmap {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+            display: block;
+            margin: 0 auto;
+        }
+
+        /* === Page Title === */
+        h1 {
+            margin-top: 25px;
+            font-size: 36px;
+            color: #00ffff;
+            text-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+            letter-spacing: 2px;
+        }
+
+        /* === Popup Common Styles === */
+        .popup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 15px;
+            padding: 40px 50px;
+            width: 450px;
+            text-align: center;
+            box-shadow: 0 0 25px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .popup input {
+            width: 85%;
+            padding: 12px;
+            margin: 20px 0;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+
+        .popup button {
+            background: #222;
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+
+        .popup button:hover {
+            background: #444;
+        }
+
+        .output {
+            margin-top: 20px;
+            color: #000;
+            font-weight: bold;
+            font-size: 17px;
+        }
+
+        /* === Hint in Navy Blue === */
+        .hint {
+            margin-top: 15px;
+            font-size: 15px;
+            color: navy;
+            font-style: italic;
+        }
+
+        .close {
+            position: absolute;
+            right: 15px;
+            top: 10px;
+            font-size: 20px;
+            color: #888;
+            cursor: pointer;
+        }
+
+        .close:hover {
+            color: #000;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Round 2 : Box Challenge</h1>
+
+    <!-- === Clickable Image Map (kept) === -->
+    <img class="bgmap" src="{{ url_for('static', filename='bg.jpg') }}" usemap="#map">
+    <map name="map">
+        <area shape="rect" coords="518,318,265,105" href="#" onclick="openPopup('popup1'); return false;">
+        <area href="#" coords="668,108,941,332" shape="rect" onclick="openPopup('popup2'); return false;">
+        <area href="#" coords="667,564,936,779" shape="rect" onclick="openPopup('popup3'); return false;">
+        <area href="#" coords="1061,99,1333,328" shape="rect" onclick="openPopup('popup4'); return false;">
+    </map>
+
+    <!-- === Popup 1 === -->
+    <div id="popup1" class="popup">
+        <span class="close" onclick="closePopup('popup1')">✖</span>
+        <input type="text" id="input_text1" placeholder="Enter any string">
+        <br>
+        <button onclick="runVowelTwist()">Run</button>
+        <div id="hint1" class="hint"></div>
+        <div id="output1" class="output"></div>
+    </div>
+
+    <!-- === Popup 2 === -->
+    <div id="popup2" class="popup">
+        <span class="close" onclick="closePopup('popup2')">✖</span>
+        <div id="lock2">
+            <input type="password" id="passkey2" placeholder="Enter passkey">
+            <button onclick="checkPasskey(2)">Unlock</button>
+        </div>
+        <div id="content2" style="display:none;">
+            <input type="number" id="total_numbers" placeholder="Enter total numbers">
+            <div id="number_inputs"></div>
+            <button onclick="generateInputs()">Next</button>
+            <button onclick="runBinaryGlow()">Run</button>
+            <div id="hint2" class="hint"></div>
+            <div id="output2" class="output"></div>
+        </div>
+    </div>
+
+    <!-- === Popup 3 === -->
+    <div id="popup3" class="popup">
+        <span class="close" onclick="closePopup('popup3')">✖</span>
+        <div id="lock3">
+            <input type="password" id="passkey3" placeholder="Enter passkey">
+            <button onclick="checkPasskey(3)">Unlock</button>
+        </div>
+        <div id="content3" style="display:none;">
+            <input type="number" id="matrix_size" placeholder="Enter size of square matrix">
+            <button onclick="generateMatrixInputs()">Next</button>
+            <div id="matrix_inputs"></div>
+            <button onclick="runMatrixDecode()">Run</button>
+            <div id="hint3" class="hint"></div>
+            <div id="output3" class="output"></div>
+        </div>
+    </div>
+
+    <!-- === Popup 4 === -->
+    <div id="popup4" class="popup">
+        <span class="close" onclick="closePopup('popup4')">✖</span>
+        <div id="lock4">
+            <input type="password" id="passkey4" placeholder="Enter passkey">
+            <button onclick="checkPasskey(4)">Unlock</button>
+        </div>
+        <div id="content4" style="display:none;">
+            <input type="number" id="total_numbers4" placeholder="Enter total numbers">
+            <div id="number_inputs4"></div>
+            <button onclick="generateInputs4()">Next</button>
+            <button onclick="runDecodeStack()">Run</button>
+            <div id="hint4" class="hint"></div>
+            <div id="output4" class="output"></div>
+        </div>
+    </div>
+
+    <script>
+        function openPopup(id) {
+            document.getElementById(id).style.display = 'block';
+        }
+
+        function closePopup(id) {
+            document.getElementById(id).style.display = 'none';
+            document.querySelectorAll('.output').forEach(o => o.innerText = '');
+            document.querySelectorAll('.hint').forEach(h => h.innerText = '');
+            document.querySelectorAll('input').forEach(inp => inp.value = '');
+            document.getElementById('number_inputs').innerHTML = '';
+            document.getElementById('matrix_inputs').innerHTML = '';
+            document.getElementById('content2').style.display = 'none';
+            document.getElementById('lock2').style.display = 'block';
+            document.getElementById('content3').style.display = 'none';
+            document.getElementById('lock3').style.display = 'block';
+        }
+
+        // === Passkey Validation ===
+        function checkPasskey(box) {
+            const keyElem = document.getElementById('passkey' + box);
+            const key = keyElem ? keyElem.value : '';
+            const validKeys = { 2: '41125', 3: '41125', 4: '41125' }; 
+            if (validKeys[box] === key) {
+                document.getElementById('lock' + box).style.display = 'none';
+                document.getElementById('content' + box).style.display = 'block';
+            } else {
+                alert("Incorrect passkey!");
+            }
+        }
+
+        // === Vowel Twist ===
+        function runVowelTwist() {
+            const text = document.getElementById('input_text1').value;
+            if (text === '') { alert("Please enter a string!"); return; }
+
+            fetch('/voweltwist', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ 'input_text': text })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('hint1').innerText = data.hint;
+                document.getElementById('output1').innerText = "Output: " + data.result;
+            })
+            .catch(error => {
+                document.getElementById('output1').innerText = "Error: " + error;
+            });
+        }
+
+        // === Binary Glow ===
+        function generateInputs() {
+            const total = parseInt(document.getElementById('total_numbers').value);
+            const container = document.getElementById('number_inputs');
+            container.innerHTML = '';
+            if (isNaN(total) || total <= 0) {
+                alert("Enter a valid number of inputs!");
+                return;
+            }
+            for (let i = 0; i < total; i++) {
+                container.innerHTML += `<input type="number" id="num_${i}" placeholder="Enter number ${i+1}"><br>`;
+            }
+        }
+
+        function runBinaryGlow() {
+            const total = parseInt(document.getElementById('total_numbers').value);
+            if (isNaN(total) || total <= 0) { alert("Enter total numbers first!"); return; }
+
+            const numbers = [];
+            for (let i = 0; i < total; i++) {
+                const val = document.getElementById(`num_${i}`).value;
+                if (val === '') { alert(`Please enter number ${i+1}!`); return; }
+                numbers.push(val);
+            }
+
+            fetch('/binaryglow', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ 'numbers': JSON.stringify(numbers) })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('hint2').innerText = data.hint;
+                document.getElementById('output2').innerHTML = "Final Output:<br>" + data.result.join("<br>");
+            })
+            .catch(error => {
+                document.getElementById('output2').innerText = "Error: " + error;
+            });
+        }
+
+        // === Matrix Decode ===
+        function generateMatrixInputs() {
+            const n = parseInt(document.getElementById('matrix_size').value);
+            const container = document.getElementById('matrix_inputs');
+            container.innerHTML = '';
+            if (isNaN(n) || n <= 0) {
+                alert("Enter valid matrix size!");
+                return;
+            }
+            for (let i = 0; i < n; i++) {
+                container.innerHTML += `<input type="text" id="row_${i}" placeholder="Enter row ${i+1} (space-separated)"><br>`;
+            }
+        }
+
+        function runMatrixDecode() {
+            const n = parseInt(document.getElementById('matrix_size').value);
+            if (isNaN(n) || n <= 0) { alert("Enter valid matrix size!"); return; }
+
+            const matrix = [];
+            for (let i = 0; i < n; i++) {
+                const row = document.getElementById(`row_${i}`).value.trim().split(" ").map(Number);
+                if (row.length !== n) {
+                    alert(`Row ${i+1} must have ${n} numbers!`);
+                    return;
+                }
+                matrix.push(row);
+            }
+
+            fetch('/matrixdecoder', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ matrix: matrix })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('hint3').innerText = data.hint;
+                document.getElementById('output3').innerHTML = "Decoded Matrix:<br>" + data.result.map(r => r.join(" ")).join("<br>");
+            })
+            .catch(error => {
+                document.getElementById('output3').innerText = "Error: " + error;
+            });
+        }
+
+        // === Decode Stack Challenge ===
+        function generateInputs4() {
+            const total = parseInt(document.getElementById('total_numbers4').value);
+            const container = document.getElementById('number_inputs4');
+            container.innerHTML = '';
+            if (isNaN(total) || total <= 0) {
+                alert("Enter a valid number of inputs!");
+                return;
+            }
+            for (let i = 0; i < total; i++) {
+                container.innerHTML += `<input type="number" id="num4_${i}" placeholder="Enter number ${i+1}"><br>`;
+            }
+        }
+
+        function runDecodeStack() {
+            const n = parseInt(document.getElementById('total_numbers4').value);
+            if (isNaN(n) || n <= 0) { alert("Enter total numbers first!"); return; }
+
+            const nums = [];
+            for (let i = 0; i < n; i++) {
+                const val = document.getElementById(`num4_${i}`).value;
+                if (val === '') { alert(`Please enter number ${i+1}!`); return; }
+                nums.push(parseInt(val));
+            }
+
+            let stack = [];
+            for (let i = 0; i < n; i++) {
+                if (i % 2 === 0) stack.push(nums[i]);
+                else stack.unshift(nums[i]);
+                if (stack.length > 3) stack.pop();
+            }
+
+            const decoded = stack.reduce((a, b) => a + b, 0);
+            document.getElementById('hint4').innerText = "HINT: Even ones climb, odd ones sneak to the front — only three survive.";
+            document.getElementById('output4').innerText = "Decoded Output: " + decoded;
+        }
+
+        // Disable right-click & dev tools
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.ctrlKey && ['c', 'u', 's'].includes(e.key.toLowerCase())) e.preventDefault();
+            if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'i') e.preventDefault();
+        });
+    </script>
+
+</body>
+</html>
